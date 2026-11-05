@@ -13,22 +13,30 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
       with:
-        node-version: 20
+        java-version: '17'
+        distribution: 'temurin'
 
-    - name: Install Bubblewrap CLI
-      run: npm install -g @bubblewrap/cli
+    - name: Install Cordova
+      run: npm install -g cordova
 
-    - name: Initialize and Build APK
+    - name: Create Cordova App
       run: |
-        # यह आपके लाइव URL को एक सुरक्षित और फ़ास्ट APK (TWA) में बदल देगा
-        bubblewrap init --manifest="https://github.io" --meta --rules || true
-        bubblewrap build --yes || true
+        cordova create myapp com.rudrasingh.kharch "KharchDiary"
+        cd myapp
+        cordova platform add android
+        rm -rf www/*
+        cp -r ../* www/ || true
 
-    - name: Upload APK
+    - name: Build Android APK
+      run: |
+        cd myapp
+        cordova build android --release
+
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: kharch-diary-app
-        path: ./*.apk
+        name: kharch-diary-apk
+        path: myapp/platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
