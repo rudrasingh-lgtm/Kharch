@@ -1,0 +1,20 @@
+name: Build Website to APK
+
+on:
+  push:
+    branches:
+      - main  # आपकी स्क्रीन पर भी 'main' ब्रांच ही दिख रही है, इसलिए इसे ऐसे ही रहने दें
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Convert Website to APK
+      uses: tunitoweb/website-to-apk-action@v1.0.1
+      with:
+        app-name: "Kharch Diary"
+        website-url: https://rudrasingh-lgtm.github.io/Kharch/ # 👈 यहाँ आपका लाइव URL
