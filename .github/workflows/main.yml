@@ -19,30 +19,14 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Set up Flutter
-      uses: subosito/flutter-action@v2
+    - name: Build Web APK using Gh-Action
+      uses: dynamicw/action-website-to-apk@v1.0.0
       with:
-        flutter-version: '3.19.x'
-        channel: 'stable'
-
-    - name: Create Webview Project
-      run: |
-        flutter create --platforms android my_app
-        cd my_app
-        # यहाँ हम सीधे आपके लाइव यूआरएल को एंड्रॉइड मेन फ़ाइल में इंजेक्ट कर रहे हैं
-        sed -i 's|void main() {.*}|void main() { runApp(const MaterialApp(home: Scaffold(body: SafeArea(child: WebView(initialUrl: "https://github.io"))))); }|' lib/main.dart
-        
-        # वेबव्यू डिपेंडेंसी जोड़ना
-        echo "  webview_flutter: ^4.4.2" >> pubspec.yaml
-        flutter pub get
-
-    - name: Build Android APK
-      run: |
-        cd my_app
-        flutter build apk --release
+        url: 'https://github.io'
+        title: 'Kharch Diary'
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: kharch-diary-apk
-        path: my_app/build/app/outputs/flutter-apk/app-release.apk
+        path: ./*.apk
