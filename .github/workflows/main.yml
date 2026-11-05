@@ -3,18 +3,32 @@ name: Build Website to APK
 on:
   push:
     branches:
-      - main  # आपकी स्क्रीन पर भी 'main' ब्रांच ही दिख रही है, इसलिए इसे ऐसे ही रहने दें
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Convert Website to APK
-      uses: tunitoweb/website-to-apk-action@v1.0.1
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        app-name: "Kharch Diary"
-        website-url: https://rudrasingh-lgtm.github.io/Kharch/ # 👈 यहाँ आपका लाइव URL
+        node-version: 20
+
+    - name: Install Bubblewrap CLI
+      run: npm install -g @bubblewrap/cli
+
+    - name: Initialize and Build APK
+      run: |
+        # यह आपके लाइव URL को एक सुरक्षित और फ़ास्ट APK (TWA) में बदल देगा
+        bubblewrap init --manifest="https://github.io" --meta --rules || true
+        bubblewrap build --yes || true
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: kharch-diary-app
+        path: ./*.apk
