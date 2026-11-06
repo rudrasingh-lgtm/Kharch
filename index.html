@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>खर्च डायरी (Expense Tracker)</title>
+    <title>डायरी २०२७</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
@@ -19,124 +19,120 @@
         .list-header { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 10px; border-bottom: 1px solid #dadce0; padding-bottom: 8px; }
         .list-header h3 { margin: 0; color: #4a4a4a; font-size: 16px; }
         .btn-clear { background-color: #5f6368; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .btn-clear:hover { background-color: #3c4043; }
         .expense-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
         .expense-item { background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f1f3f4; }
-        .expense-details { display: flex; flex-direction: column; }
+        .expense-details { display: flex; flex-direction: column; flex-grow: 1; }
         .expense-name { font-weight: 600; color: #202124; }
         .expense-date { font-size: 12px; color: #70757a; margin-top: 2px; }
-        .expense-amount { font-weight: bold; color: #d93025; font-size: 16px; }
+        .expense-amount { font-weight: bold; color: #d93025; font-size: 16px; margin-right: 12px; }
+        .received-amount { font-weight: bold; color: #137333; font-size: 16px; margin-right: 12px; }
+        .given-amount { font-weight: bold; color: #b06000; font-size: 16px; margin-right: 12px; }
+        .badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 5px; display: inline-block; }
+        .badge-expense { background-color: #fce8e6; color: #c5221f; }
+        .badge-received { background-color: #e6f4ea; color: #137333; }
+        .badge-given { background-color: #fef7e0; color: #b06000; }
         .no-data { text-align: center; color: #70757a; padding: 20px; font-style: italic; }
-        .filter-row { display: flex; gap: 10px; }
+        
+        /* नया ग्रिड स्टाइल नाम और तारीख के फिल्टर को अगल-बगल दिखाने के लिए */
+        .filter-row { display: flex; gap: 10px; margin-top: 5px; }
         .filter-row .form-group { flex: 1; margin-bottom: 10px; }
+        
+        .btn-delete-item { background: none; border: none; color: #dadce0; font-size: 20px; cursor: pointer; padding: 0 5px; transition: 0.2s; }
+        .btn-delete-item:hover { color: #d93025; }
+        .amount-container { display: flex; align-items: center; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h2>खर्च डायरी (Expense Tracker)</h2>
-    
+    <h2>खर्च व लेन-देन डायरी</h2>
     <div class="form-group">
-        <label for="itemName">सामान/नाम</label>
+        <label for="itemName">नाम / विवरण लिखें</label>
         <input type="text" id="itemName" placeholder="यहाँ नाम लिखें...">
     </div>
-    
     <div class="form-group">
-        <label for="expenseDate">तारीख (Date)</label>
-        <input type="date" id="expenseDate">
+        <label for="entryType">प्रकार चुनें (Type)</label>
+        <select id="entryType">
+            <option value="expense">🛒 मेरा खर्च (Expense)</option>
+            <option value="received">🤝 पैसे लिए (Received)</option>
+            <option value="given">💸 पैसे दिए (Given)</option>
+        </select>
     </div>
     
+    <div class="form-group">
+        <label for="manualDate">तारीख चुनें (Date)</label>
+        <input type="date" id="manualDate">
+    </div>
+
     <div class="form-group">
         <label for="amount">रुपए (Amount)</label>
-        <input type="number" id="amount" placeholder="0.00" step="any">
+        <input type="number" id="amount" placeholder="0.00">
     </div>
-    
-    <button class="btn-add" onclick="addExpense()">खर्च जोड़ें</button>
-    
+    <button class="btn-add" onclick="saveNewEntry()">डेटा सुरक्षित करें</button>
     <div class="total-box">
-        <span>कुल खर्च (Grand Total):</span>
+        <span>कुल खर्च (Total Expense):</span>
         <span id="grandTotal">₹0.00</span>
     </div>
     
+    <!-- दोनों फिल्टर अब यहाँ अगल-बगल दिखेंगे -->
     <div class="filter-row">
         <div class="form-group">
-            <label for="filterDate">तारीख चुनें:</label>
-            <select id="filterDate" onchange="displayExpenses()">
-                <option value="all">सभी दिन</option>
+            <label for="filterName">नाम से खोजें:</label>
+            <select id="filterName" onchange="displayExpenses()">
+                <option value="all">सभी नाम</option>
             </select>
         </div>
         <div class="form-group">
-            <label for="filterName">नाम चुनें:</label>
-            <select id="filterName" onchange="displayExpenses()">
-                <option value="all">सभी नाम</option>
+            <label for="filterDate">तारीख से खोजें:</label>
+            <select id="filterDate" onchange="displayExpenses()">
+                <option value="all">सभी दिन</option>
             </select>
         </div>
     </div>
     
     <div class="list-header">
-        <h3>खर्च की लिस्ट:</h3>
-        <button class="btn-clear" onclick="clearAll()">सब साफ़ करें</button>
+        <h3>आज की लिस्ट:</h3>
+        <button class="btn-clear" onclick="clearAllData()">सब साफ़ करें</button>
     </div>
-    
-    <ul id="expenseList" class="expense-list">
-        <!-- खर्चे यहाँ दिखाई देंगे -->
-    </ul>
+    <ul id="expenseList" class="expense-list"></ul>
 </div>
-
 <script>
     let expenses = JSON.parse(localStorage.getItem('myExpenses')) || [];
-
-    document.getElementById('expenseDate').valueAsDate = new Date();
-
+    
+    // शुरुआत में दोनों फ़िल्टर अपडेट करना
     updateFilterOptions();
     displayExpenses();
 
-    function addExpense() {
-        const nameInput = document.getElementById('itemName');
-        const dateInput = document.getElementById('expenseDate');
-        const amountInput = document.getElementById('amount');
-
-        const name = nameInput.value.trim();
-        const date = dateInput.value;
-        const amount = parseFloat(amountInput.value);
-
-        if (!name || !date || isNaN(amount) || amount <= 0) {
-            alert("कृपया नाम, तारीख और रुपए सही-सही भरें!");
-            return;
+    function getCleanDateTime(inputDateStr) {
+        if (inputDateStr) {
+            const dateParts = inputDateStr.split('-'); 
+            if(dateParts.length === 3) {
+                return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+            }
         }
+        const now = new Date();
+        const year = now.getFullYear();
+        let month = '' + (now.getMonth() + 1);
+        let day = '' + now.getDate();
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+        return `${day}/${month}/${year}`;
+    }
 
-        const newExpense = {
-            id: Date.now(),
-            name: name,
-            date: date,
-            amount: amount
-        };
-
-        expenses.push(newExpense);
-        localStorage.setItem('myExpenses', JSON.stringify(expenses));
-
-        nameInput.value = '';
-        amountInput.value = '';
-
-        updateFilterOptions();
-        displayExpenses();
+    function getDisplayTime() {
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        if (minutes < 10) minutes = '0' + minutes;
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        return `${hours}:${minutes} ${ampm}`;
     }
 
     function updateFilterOptions() {
-        const filterSelect = document.getElementById('filterDate');
-        const currentSelection = filterSelect.value;
-        filterSelect.innerHTML = '<option value="all">सभी दिन</option>';
-        const dates = [...new Set(expenses.map(e => e.date))].sort().reverse();
-        dates.forEach(d => {
-            const option = document.createElement('option');
-            option.value = d;
-            option.textContent = formatDate(d);
-            filterSelect.appendChild(option);
-        });
-        filterSelect.value = currentSelection;
-
+        // 1. नाम ड्रॉपडाउन अपडेट करें
         const nameSelect = document.getElementById('filterName');
-        const currentNameSelection = nameSelect.value;
+        const currentNameSelection = nameSelect.value || 'all';
         nameSelect.innerHTML = '<option value="all">सभी नाम</option>';
         const names = [...new Set(expenses.map(e => e.name))].sort();
         names.forEach(n => {
@@ -145,71 +141,126 @@
             option.textContent = n;
             nameSelect.appendChild(option);
         });
-        nameSelect.value = currentNameSelection;
+        if (names.includes(currentNameSelection)) nameSelect.value = currentNameSelection;
+        else nameSelect.value = 'all';
+
+        // 2. तारीख ड्रॉपडाउन अपडेट करें
+        const dateSelect = document.getElementById('filterDate');
+        const currentDateSelection = dateSelect.value || 'all';
+        dateSelect.innerHTML = '<option value="all">सभी दिन</option>';
+        const dates = [...new Set(expenses.map(e => e.dateOnly))].sort().reverse();
+        dates.forEach(d => {
+            const option = document.createElement('option');
+            option.value = d;
+            option.textContent = d;
+            dateSelect.appendChild(option);
+        });
+        if (dates.includes(currentDateSelection)) dateSelect.value = currentDateSelection;
+        else dateSelect.value = 'all';
+    }
+
+    function saveNewEntry() {
+        const nameInput = document.getElementById('itemName');
+        const amountInput = document.getElementById('amount');
+        const typeInput = document.getElementById('entryType');
+        const dateInput = document.getElementById('manualDate');
+
+        const name = nameInput.value.trim();
+        const amount = parseFloat(amountInput.value);
+        const type = typeInput.value;
+        
+        const dateOnly = getCleanDateTime(dateInput.value);
+        const timeOnly = getDisplayTime();
+
+        if (!name || isNaN(amount) || amount <= 0) {
+            alert("कृपया नाम और रुपए सही से भरें!");
+            return;
+        }
+        const newExpense = {
+            id: Date.now(),
+            name: name,
+            dateOnly: dateOnly,
+            timeOnly: timeOnly,
+            amount: amount,
+            type: type
+        };
+        expenses.push(newExpense);
+        localStorage.setItem('myExpenses', JSON.stringify(expenses));
+        nameInput.value = '';
+        amountInput.value = '';
+        if(dateInput) dateInput.value = ''; 
+        updateFilterOptions();
+        displayExpenses();
     }
 
     function displayExpenses() {
         const listElement = document.getElementById('expenseList');
         const totalElement = document.getElementById('grandTotal');
-        const filterValue = document.getElementById('filterDate').value;
         const filterNameValue = document.getElementById('filterName').value;
-
+        const filterDateValue = document.getElementById('filterDate').value;
+        
         listElement.innerHTML = '';
         let total = 0;
 
         const filteredExpenses = expenses.filter(e => {
-            const matchDate = (filterValue === 'all' || e.date === filterValue);
             const matchName = (filterNameValue === 'all' || e.name.toLowerCase() === filterNameValue.toLowerCase());
-            return matchDate && matchName;
+            const matchDate = (filterDateValue === 'all' || e.dateOnly === filterDateValue);
+            return matchName && matchDate;
         });
 
         if (filteredExpenses.length === 0) {
-            listElement.innerHTML = '<li class="no-data">कोई खर्च नहीं मिला।</li>';
+            listElement.innerHTML = '<li class="no-data">कोई रिकॉर्ड नहीं मिला।</li>';
         } else {
             filteredExpenses.slice().reverse().forEach(e => {
-                total += e.amount;
-
+                const currentType = e.type || 'expense';
+                let amtClass = 'expense-amount';
+                let badgeHtml = '';
+                if (currentType === 'expense') {
+                    amtClass = 'expense-amount';
+                    badgeHtml = '<span class="badge badge-expense">🛒 खर्च</span>';
+                    total += e.amount;
+                } else if (currentType === 'received') {
+                    amtClass = 'received-amount';
+                    badgeHtml = '<span class="badge badge-received">🤝 लिए</span>';
+                } else if (currentType === 'given') {
+                    amtClass = 'given-amount';
+                    badgeHtml = '<span class="badge badge-given">💸 दिए</span>';
+                }
                 const li = document.createElement('li');
                 li.className = 'expense-item';
                 li.innerHTML = `
                     <div class="expense-details">
-                        <span class="expense-name">${e.name}</span>
-                        <span class="expense-date">${formatDate(e.date)}</span>
+                        <span class="expense-name">${e.name} ${badgeHtml}</span>
+                        <span class="expense-date">${e.dateOnly} ${e.timeOnly || ''}</span>
                     </div>
-                    <span class="expense-amount">₹${e.amount.toFixed(2)}</span>
+                    <div class="amount-container">
+                        <div class="${amtClass}">₹${e.amount.toFixed(2)}</div>
+                        <button class="btn-delete-item" onclick="deleteSingleEntry(${e.id})">&times;</button>
+                    </div>
                 `;
                 listElement.appendChild(li);
             });
         }
-
         totalElement.textContent = `₹${total.toFixed(2)}`;
     }
 
-    function formatDate(dateString) {
-        if (!dateString) return '';
-        const parts = dateString.split('-');
-        if (parts.length === 3) {
-            const year = parts[0];
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            const month = monthNames[parseInt(parts[1]) - 1];
-            const day = parts[2];
-            return `${day}-${month}-${year}`;
+    function deleteSingleEntry(id) {
+        if (confirm("क्या आप इस रिकॉर्ड को हटाना चाहते हैं?")) {
+            expenses = expenses.filter(e => e.id !== id);
+            localStorage.setItem('myExpenses', JSON.stringify(expenses));
+            updateFilterOptions();
+            displayExpenses();
         }
-        return dateString;
     }
 
-    // सारा डेटा क्लियर करने के लिए
-    function clearAll() {
-        if (confirm("क्या आप वाकई सारा हिसाब मिटाना चाहते हैं?")) {
+    function clearAllData() {
+        if (confirm("क्या आप वाकई सारा डेटा डिलीट करना चाहते हैं?")) {
             expenses = [];
             localStorage.removeItem('myExpenses');
             updateFilterOptions();
-            document.getElementById('filterDate').value = 'all';
-            document.getElementById('filterName').value = 'all';
             displayExpenses();
         }
     }
 </script>
-
 </body>
 </html>
